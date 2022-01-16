@@ -1,0 +1,12 @@
+@import "./_vars.scss";
+
+@function toRem($value) {
+	$remValue: ($value / $font-size) + rem;
+	@return $remValue;
+}
+
+@mixin center {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
