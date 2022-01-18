@@ -16,11 +16,11 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .header {
-	height: 60px;
-	width: 100%;
+	height: toRem(60);
 	background: salmon;
+	padding: 0 toRem(20);
 
 	display: flex;
 	align-items: center;
@@ -28,7 +28,14 @@ export default {
 }
 
 a {
-	margin-right: 10px;
+	margin-right: toRem(16);
 	text-decoration: none;
+	color: $color-white;
+	font-size: toRem(18);
+	transition: color 0.2s ease-in-out;
+
+	&:hover {
+		color: $color-text;
+	}
 }
 </style>

@@ -22,6 +22,6 @@ export default {
 .wrapper {
 	padding: 0 15%;
 	margin: 0 auto;
-	min-height: calc(100vh - 120px);
+	min-height: calc(100vh - #{toRem(120)});
 }
 </style>

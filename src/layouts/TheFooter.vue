@@ -13,7 +13,7 @@ export default {
 
 <style lang="scss">
 .footer {
-	height: 60px;
+	height: toRem(60);
 	width: 100%;
 	background: salmon;
 
