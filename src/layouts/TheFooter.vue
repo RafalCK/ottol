@@ -1,6 +1,6 @@
 <template>
 	<div class="footer">
-		<span>Ottol © 2022 Made by RafalCK</span>
+		<span class="footer__info">Ottol © 2022 Made by RafalCK</span>
 	</div>
 </template>
 
@@ -15,10 +15,14 @@ export default {
 .footer {
 	height: toRem(60);
 	width: 100%;
-	background: salmon;
+	background: $color-primary;
 
 	display: flex;
 	align-items: center;
 	justify-content: center;
+
+	&__info {
+		color: $color-white;
+	}
 }
 </style>

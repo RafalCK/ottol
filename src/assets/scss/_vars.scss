@@ -1,7 +1,9 @@
-$color-primary: salmon;
+$color-primary: #ffc10f;
+$color-additional: #1d9eda;
 $color-white: #fff;
 $color-grey: #f8f5f2;
-$color-text: #0a3847;
+$color-text: $color-additional;
+$color-hover: #0178c4;
 
 $font-size: 14;
 $regular: 400;
@@ -9,4 +11,4 @@ $medium: 500;
 $bold: 700;
 $italic: italic;
 
-$transition: 2s ease-in;
+$transition: all 0.3s ease-in;

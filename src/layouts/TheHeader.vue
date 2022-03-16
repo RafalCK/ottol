@@ -1,6 +1,10 @@
 <template>
 	<div class="header">
-		<h2>Ottol</h2>
+		<div class="logo">
+			<router-link to="/">
+				<img src="../assets/images/logo_ottol.png" />
+			</router-link>
+		</div>
 		<nav>
 			<router-link to="/game">Graj</router-link>
 			<router-link to="/results">Sprawdz wyniki</router-link>
@@ -19,7 +23,7 @@ export default {
 <style lang="scss" scoped>
 .header {
 	height: toRem(60);
-	background: salmon;
+	background: $color-primary;
 	padding: 0 toRem(20);
 
 	display: flex;
@@ -27,15 +31,26 @@ export default {
 	justify-content: space-between;
 }
 
+.logo {
+	max-width: toRem(85);
+	height: toRem(65);
+	img {
+		width: 100%;
+		height: auto;
+		object-fit: cover;
+	}
+}
+
 a {
 	margin-right: toRem(16);
 	text-decoration: none;
 	color: $color-white;
 	font-size: toRem(18);
+	font-weight: $bold;
 	transition: color 0.2s ease-in-out;
 
 	&:hover {
-		color: $color-text;
+		color: $color-hover;
 	}
 }
 </style>

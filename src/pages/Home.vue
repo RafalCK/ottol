@@ -25,7 +25,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 h1 {
 	text-align: center;
 	margin-bottom: toRem(50);
@@ -39,24 +39,5 @@ h1 {
 }
 .card3::after {
 	content: "3";
-}
-.card__link {
-	margin-left: toRem(10);
-	text-decoration: none;
-	font-size: toRem(14);
-	text-transform: uppercase;
-	background: $color-primary;
-	padding: toRem(8) toRem(20);
-	border-radius: toRem(25);
-	color: $color-white;
-	transition: color 0.2s ease-in-out;
-
-	&:hover {
-		color: $color-text;
-	}
-}
-
-.decoration {
-	border-bottom: toRem(8) solid $color-primary;
 }
 </style>

@@ -4,3 +4,20 @@ html {
 	font-size: 16px;
 	color: $color-text;
 }
+
+body::-webkit-scrollbar {
+	width: toRem(10);
+}
+
+body::-webkit-scrollbar-thumb {
+	background-color: $color-white;
+	outline: 1px solid $color-primary;
+}
+
+input {
+	font-size: 16px;
+}
+
+.decoration {
+	border-bottom: toRem(8) solid $color-primary;
+}

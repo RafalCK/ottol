@@ -59,4 +59,20 @@ export default {
 		font-style: italic;
 	}
 }
+
+.card__link {
+	margin-left: toRem(10);
+	text-decoration: none;
+	font-size: toRem(14);
+	text-transform: uppercase;
+	background: $color-primary;
+	padding: toRem(8) toRem(20);
+	border-radius: toRem(25);
+	color: $color-white;
+	transition: color 0.2s ease-in-out;
+
+	&:hover {
+		color: $color-text;
+	}
+}
 </style>
