@@ -5,29 +5,34 @@
 		</div>
 		<h1>Ottol Plus</h1>
 	</div>
-	<form class="game__form" @submit.prevent="inputNotEmpty">
+	<Form class="game__form" @submit="onSubmit" :validation-schema="schema">
 		<div class="form__input">
-			<label for="first-number">Pierwsza liczba</label>
-			<input v-model="firstNumber" type="number" id="first-number" min="1" max="50" />
+			<label for="firstNumber">Pierwsza liczba</label>
+			<Field v-model="firstNumber" type="number" name="firstNumber" min="1" max="50" />
+			<ErrorMessage name="firstNumber" />
 		</div>
 		<div class="form__input">
-			<label for="second-number">Druga liczba</label>
-			<input v-model="secondNumber" type="number" id="second-number" min="1" max="50" />
+			<label for="secondNumber">Druga liczba</label>
+			<Field v-model="secondNumber" type="number" name="secondNumber" min="1" max="50" />
+			<ErrorMessage name="secondNumber" />
 		</div>
 		<div class="form__input">
-			<label for="third-number">Trzecia liczba</label>
-			<input v-model="thirdNumber" type="number" id="third-number" min="1" max="50" />
+			<label for="thirdNumber">Trzecia liczba</label>
+			<Field v-model="thirdNumber" type="number" name="thirdNumber" min="1" max="50" />
+			<ErrorMessage name="thirdNumber" />
 		</div>
 		<div class="form__input">
-			<label for="fourth-number">Czwarta liczba</label>
-			<input v-model="fourthNumber" type="number" id="fourth-number" min="1" max="50" />
+			<label for="fourthNumber">Czwarta liczba</label>
+			<Field v-model="fourthNumber" type="number" name="fourthNumber" min="1" max="50" />
+			<ErrorMessage name="fourthNumber" />
 		</div>
 		<div class="form__input">
-			<label for="fifth-number">Piąta liczba</label>
-			<input v-model="fifthNumber" type="number" id="fifth-number" min="1" max="50" />
+			<label for="fifthNumber">Piąta liczba</label>
+			<Field v-model="fifthNumber" type="number" name="fifthNumber" min="1" max="50" />
+			<ErrorMessage name="fifthNumber" />
 		</div>
-		<base-button class="game__btn" :disabled="!isActive" @click="confirmNumbers">Zatwierdz liczby</base-button>
-	</form>
+		<base-button class="game__btn">Zatwierdz liczby</base-button>
+	</Form>
 	<p>Twoje wybrane liczby: {{ numbers.join(",") }}</p>
 	<p>Wylosowane liczby: {{ randomNumbers.join(",") }}</p>
 </template>
@@ -36,15 +41,18 @@
 import BaseCard from "../../base/BaseCard.vue";
 import BaseInput from "../../base/BaseInput.vue";
 import BaseButton from "../../base/BaseButton.vue";
+import CustomErrorMessages from "../../yup/CustomErrorMessages.vue";
+import { Form, Field, ErrorMessage } from "vee-validate";
+import * as yup from "yup";
 import { ref } from "vue";
 
 export default {
 	name: "OttolPlus",
-	components: { BaseCard, BaseInput, BaseButton },
+	components: { BaseCard, BaseInput, BaseButton, Form, Field, ErrorMessage },
 	setup() {
 		const numbers = ref([]);
 		const randomNumbers = ref([]);
-		const matchedNumbers = ref([]);
+
 		const firstNumber = ref("");
 		const secondNumber = ref("");
 		const thirdNumber = ref("");
@@ -52,6 +60,22 @@ export default {
 		const fifthNumber = ref("");
 
 		const isActive = ref(true);
+
+		const schema = yup.object({
+			firstNumber: yup.number().required().min(1).max(50),
+			secondNumber: yup.number().required().min(1).max(50),
+			thirdNumber: yup.number().required().min(1).max(50),
+			fourthNumber: yup.number().required().min(1).max(50),
+			fifthNumber: yup.number().required().min(1).max(50),
+		});
+
+		// let schema = yup.object().shape({
+		// 	firstNumber: yup.number().required().min(1).max(50),
+		// 	secondNumber: yup.number().required().min(1).max(50),
+		// 	thirdNumber: yup.number().required().min(1).max(50),
+		// 	fourthNumber: yup.number().required().min(1).max(50),
+		// 	fifthNumber: yup.number().required().min(1).max(50),
+		// });
 
 		function confirmNumbers() {
 			numbers.value.push(firstNumber.value);
@@ -66,10 +90,7 @@ export default {
 			fourthNumber.value = "";
 			fifthNumber.value = "";
 			getRandomNumbers();
-			compareArrays();
 		}
-
-		function inputNotEmpty() {}
 
 		function getRandom(min, max) {
 			min = Math.ceil(min);
@@ -88,6 +109,10 @@ export default {
 			}
 		}
 
+		function onSubmit(values) {
+			console.log(values);
+		}
+
 		return {
 			numbers,
 			firstNumber,
@@ -97,8 +122,9 @@ export default {
 			fifthNumber,
 			isActive,
 			randomNumbers,
+			schema,
 			confirmNumbers,
-			inputNotEmpty,
+			onSubmit,
 			getRandom,
 			getRandomNumbers,
 		};
