@@ -5,35 +5,40 @@
 		</div>
 		<h1>Ottol Plus</h1>
 	</div>
-	<Form class="game__form" @submit="onSubmit" :validation-schema="schema">
+	<p class="game__info">Wybierz <span class="game__info--bold">6</span> spośród <span class="game__info--bold">49</span> liczb (Przedział liczbowy od 1 do 49). Jeśli nie masz swoich wytypowanych liczb możesz zagrać systemem na chybił trafił.</p>
+	<Form class="game__form" @submit="onSubmit" :validation-schema="schema" v-slot="{ errors }">
 		<div class="form__input">
 			<label for="firstNumber">Pierwsza liczba</label>
-			<Field v-model="firstNumber" type="number" name="firstNumber" min="1" max="50" />
+			<Field v-model="firstNumber" type="number" name="firstNumber" min="1" max="50" :class="{ 'is-invalid': errors.firstNumber }" />
 			<ErrorMessage name="firstNumber" />
 		</div>
 		<div class="form__input">
 			<label for="secondNumber">Druga liczba</label>
-			<Field v-model="secondNumber" type="number" name="secondNumber" min="1" max="50" />
+			<Field v-model="secondNumber" type="number" name="secondNumber" min="1" max="50" :class="{ 'is-invalid': errors.secondNumber }" />
 			<ErrorMessage name="secondNumber" />
 		</div>
 		<div class="form__input">
 			<label for="thirdNumber">Trzecia liczba</label>
-			<Field v-model="thirdNumber" type="number" name="thirdNumber" min="1" max="50" />
+			<Field v-model="thirdNumber" type="number" name="thirdNumber" min="1" max="50" :class="{ 'is-invalid': errors.thirdNumber }" />
 			<ErrorMessage name="thirdNumber" />
 		</div>
 		<div class="form__input">
 			<label for="fourthNumber">Czwarta liczba</label>
-			<Field v-model="fourthNumber" type="number" name="fourthNumber" min="1" max="50" />
+			<Field v-model="fourthNumber" type="number" name="fourthNumber" min="1" max="50" :class="{ 'is-invalid': errors.fourthNumber }" />
 			<ErrorMessage name="fourthNumber" />
 		</div>
 		<div class="form__input">
 			<label for="fifthNumber">Piąta liczba</label>
-			<Field v-model="fifthNumber" type="number" name="fifthNumber" min="1" max="50" />
+			<Field v-model="fifthNumber" type="number" name="fifthNumber" min="1" max="50" :class="{ 'is-invalid': errors.fifthNumber }" />
 			<ErrorMessage name="fifthNumber" />
 		</div>
-		<base-button class="game__btn">Zatwierdz liczby</base-button>
+		<div class="game__confirm">
+			<base-button type="button" @click="randomMode" class="game__btn--reverse">Chybił trafił</base-button>
+			<base-button class="game__btn">Zatwierdz liczby</base-button>
+		</div>
 	</Form>
-	<p>Twoje wybrane liczby: {{ numbers.join(",") }}</p>
+	<p>Chybił trafił liczby: {{ numbers.join(",") }}</p>
+	<p>Potwierdzone liczby: {{ submittedNumbers.join(",") }}</p>
 	<p>Wylosowane liczby: {{ randomNumbers.join(",") }}</p>
 </template>
 
@@ -41,7 +46,6 @@
 import BaseCard from "../../base/BaseCard.vue";
 import BaseInput from "../../base/BaseInput.vue";
 import BaseButton from "../../base/BaseButton.vue";
-import CustomErrorMessages from "../../yup/CustomErrorMessages.vue";
 import { Form, Field, ErrorMessage } from "vee-validate";
 import * as yup from "yup";
 import { ref } from "vue";
@@ -51,6 +55,7 @@ export default {
 	components: { BaseCard, BaseInput, BaseButton, Form, Field, ErrorMessage },
 	setup() {
 		const numbers = ref([]);
+		const submittedNumbers = ref([]);
 		const randomNumbers = ref([]);
 
 		const firstNumber = ref("");
@@ -60,35 +65,24 @@ export default {
 		const fifthNumber = ref("");
 
 		const isActive = ref(true);
-
+		yup.mixed().notOneOf(["jimmy", 42]);
 		const schema = yup.object({
-			firstNumber: yup.number().required().min(1).max(50),
-			secondNumber: yup.number().required().min(1).max(50),
-			thirdNumber: yup.number().required().min(1).max(50),
-			fourthNumber: yup.number().required().min(1).max(50),
-			fifthNumber: yup.number().required().min(1).max(50),
+			firstNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable(),
+			secondNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable(),
+			thirdNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable(),
+			fourthNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable(),
+			fifthNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable(),
 		});
 
-		// let schema = yup.object().shape({
-		// 	firstNumber: yup.number().required().min(1).max(50),
-		// 	secondNumber: yup.number().required().min(1).max(50),
-		// 	thirdNumber: yup.number().required().min(1).max(50),
-		// 	fourthNumber: yup.number().required().min(1).max(50),
-		// 	fifthNumber: yup.number().required().min(1).max(50),
-		// });
+		function emptyStringToNull(value, originalValue) {
+			if (typeof originalValue === "string" && originalValue === "") {
+				return null;
+			}
+			return value;
+		}
 
 		function confirmNumbers() {
-			numbers.value.push(firstNumber.value);
-			numbers.value.push(secondNumber.value);
-			numbers.value.push(thirdNumber.value);
-			numbers.value.push(fourthNumber.value);
-			numbers.value.push(fifthNumber.value);
 			isActive.value = false;
-			firstNumber.value = "";
-			secondNumber.value = "";
-			thirdNumber.value = "";
-			fourthNumber.value = "";
-			fifthNumber.value = "";
 			getRandomNumbers();
 		}
 
@@ -98,35 +92,86 @@ export default {
 			return Math.floor(Math.random() * (max - min + 1)) + min;
 		}
 
-		function getRandomNumbers() {
+		function drawNumbers() {
+			let number;
+			let numberInArray;
 			for (let i = 0; i < 5; i++) {
-				let number = getRandom(1, 50);
-				if (number == randomNumbers.value.includes(number)) {
-					number = getRandom(1, 50);
-				} else {
-					randomNumbers.value.push(number);
-				}
+				do {
+					number = getRandom(1, 49);
+					numberInArray = randomNumbers.value.includes(number);
+					if (!numberInArray) {
+						randomNumbers.value.push(number);
+					}
+				} while (numberInArray);
 			}
 		}
 
-		function onSubmit(values) {
-			console.log(values);
+		function randomMode() {
+			let numberInArray;
+			firstNumber.value = getRandom(1, 49);
+			numbers.value.push(firstNumber.value);
+			console.log(numbers.value);
+			do {
+				secondNumber.value = getRandom(1, 49);
+				numberInArray = numbers.value.includes(secondNumber.value);
+				if (!numberInArray) {
+					numbers.value.push(secondNumber.value);
+					console.log(numbers.value);
+				}
+			} while (numberInArray);
+			do {
+				thirdNumber.value = getRandom(1, 49);
+				numberInArray = numbers.value.includes(thirdNumber.value);
+				if (!numberInArray) {
+					numbers.value.push(thirdNumber.value);
+					console.log(numbers.value);
+				}
+			} while (numberInArray);
+			do {
+				fourthNumber.value = getRandom(1, 49);
+				numberInArray = numbers.value.includes(fourthNumber.value);
+				if (!numberInArray) {
+					numbers.value.push(fourthNumber.value);
+					console.log(numbers.value);
+				}
+			} while (numberInArray);
+			do {
+				fifthNumber.value = getRandom(1, 49);
+				numberInArray = numbers.value.includes(fifthNumber.value);
+				if (!numberInArray) {
+					numbers.value.push(fifthNumber.value);
+					console.log(numbers.value);
+				}
+			} while (numberInArray);
+		}
+
+		function onSubmit() {
+			submittedNumbers.value.push(firstNumber.value);
+			submittedNumbers.value.push(secondNumber.value);
+			submittedNumbers.value.push(thirdNumber.value);
+			submittedNumbers.value.push(fourthNumber.value);
+			submittedNumbers.value.push(fifthNumber.value);
+			isActive.value = false;
+			drawNumbers();
+			compareArrays();
 		}
 
 		return {
 			numbers,
+			submittedNumbers,
+			randomNumbers,
 			firstNumber,
 			secondNumber,
 			thirdNumber,
 			fourthNumber,
 			fifthNumber,
 			isActive,
-			randomNumbers,
 			schema,
 			confirmNumbers,
 			onSubmit,
-			getRandom,
-			getRandomNumbers,
+			drawNumbers,
+			randomMode,
+			compareArrays,
 		};
 	},
 };
@@ -170,6 +215,17 @@ export default {
 	}
 }
 
+.game__info {
+	text-align: center;
+	font-size: toRem(15);
+	margin-bottom: toRem(22);
+
+	&--bold {
+		font-weight: $bold;
+		color: $color-primary;
+	}
+}
+
 .game__form {
 	display: flex;
 	flex-direction: column;
@@ -204,19 +260,35 @@ export default {
 		}
 	}
 }
+
+.game__confirm {
+	display: flex;
+	gap: 40px;
+}
 .game__btn {
-	margin-top: 20px;
+	margin-top: 10px;
 	padding: toRem(10) toRem(15);
 	color: $color-primary;
 	border: 1px solid $color-primary;
 	background: transparent;
 	transition: $transition;
 	cursor: pointer;
+	min-width: 144px;
 
 	&:hover {
 		color: $color-white;
 		background: $color-primary;
 		transition: $transition;
+	}
+
+	&--reverse {
+		@extend .game__btn;
+		color: $color-text;
+		border: 1px solid $color-text;
+
+		&:hover {
+			background: $color-text;
+		}
 	}
 }
 </style>
