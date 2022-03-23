@@ -6,37 +6,39 @@
 		<h1>Ottol Plus</h1>
 	</div>
 	<p class="game__info">Wybierz <span class="game__info--bold">6</span> spośród <span class="game__info--bold">49</span> liczb (Przedział liczbowy od 1 do 49). Jeśli nie masz swoich wytypowanych liczb możesz zagrać systemem na chybił trafił.</p>
-	<Form class="game__form" @submit="onSubmit" :validation-schema="schema" v-slot="{ errors }">
+	<form class="game__form" @submit="onSubmit">
 		<div class="form__input">
 			<label for="firstNumber">Pierwsza liczba</label>
-			<Field v-model="firstNumber" type="number" name="firstNumber" min="1" max="50" :class="{ 'is-invalid': errors.firstNumber }" />
-			<ErrorMessage name="firstNumber" />
+			<input v-model="firstNumber" type="number" name="firstNumber" min="1" max="50" />
+			<span>{{ firstNumberError }}</span>
 		</div>
 		<div class="form__input">
 			<label for="secondNumber">Druga liczba</label>
-			<Field v-model="secondNumber" type="number" name="secondNumber" min="1" max="50" :class="{ 'is-invalid': errors.secondNumber }" />
-			<ErrorMessage name="secondNumber" />
+			<input v-model="secondNumber" type="number" name="secondNumber" min="1" max="50" />
+			<span>{{ secondNumberError }}</span>
 		</div>
 		<div class="form__input">
 			<label for="thirdNumber">Trzecia liczba</label>
-			<Field v-model="thirdNumber" type="number" name="thirdNumber" min="1" max="50" :class="{ 'is-invalid': errors.thirdNumber }" />
-			<ErrorMessage name="thirdNumber" />
+			<input v-model="thirdNumber" type="number" name="thirdNumber" min="1" max="50" />
+			<span>{{ thirdNumberError }}</span>
 		</div>
 		<div class="form__input">
 			<label for="fourthNumber">Czwarta liczba</label>
-			<Field v-model="fourthNumber" type="number" name="fourthNumber" min="1" max="50" :class="{ 'is-invalid': errors.fourthNumber }" />
-			<ErrorMessage name="fourthNumber" />
+			<input v-model="fourthNumber" type="number" name="fourthNumber" min="1" max="50" />
+			<span>{{ fourthNumberError }}</span>
 		</div>
 		<div class="form__input">
 			<label for="fifthNumber">Piąta liczba</label>
-			<Field v-model="fifthNumber" type="number" name="fifthNumber" min="1" max="50" :class="{ 'is-invalid': errors.fifthNumber }" />
-			<ErrorMessage name="fifthNumber" />
+			<input v-model="fifthNumber" type="number" name="fifthNumber" min="1" max="50" />
+			<span>{{ fifthNumberError }}</span>
 		</div>
 		<div class="game__confirm">
-			<base-button type="button" @click="randomMode" class="game__btn--reverse">Chybił trafił</base-button>
+			<base-button type="button" class="game__btn--reverse">Chybił trafił</base-button>
 			<base-button class="game__btn">Zatwierdz liczby</base-button>
 		</div>
-	</Form>
+	</form>
+	<p>Test Array : {{ testArray }}</p>
+	<p>Test Computed : {{ numbersArray }}</p>
 	<p>Chybił trafił liczby: {{ numbers.join(",") }}</p>
 	<p>Potwierdzone liczby: {{ submittedNumbers.join(",") }}</p>
 	<p>Wylosowane liczby: {{ randomNumbers.join(",") }}</p>
@@ -46,32 +48,44 @@
 import BaseCard from "../../base/BaseCard.vue";
 import BaseInput from "../../base/BaseInput.vue";
 import BaseButton from "../../base/BaseButton.vue";
-import { Form, Field, ErrorMessage } from "vee-validate";
+import { useForm, useField } from "vee-validate";
 import * as yup from "yup";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 export default {
 	name: "OttolPlus",
-	components: { BaseCard, BaseInput, BaseButton, Form, Field, ErrorMessage },
+	components: { BaseCard, BaseInput, BaseButton },
 	setup() {
-		const numbers = ref([]);
 		const submittedNumbers = ref([]);
+		const testArray = ref([1, 2, 3, 4, 5]);
 		const randomNumbers = ref([]);
-
-		const firstNumber = ref("");
-		const secondNumber = ref("");
-		const thirdNumber = ref("");
-		const fourthNumber = ref("");
-		const fifthNumber = ref("");
+		const numbers = ref([]);
+		const arrs = [];
 
 		const isActive = ref(true);
-		yup.mixed().notOneOf(["jimmy", 42]);
-		const schema = yup.object({
-			firstNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable(),
-			secondNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable(),
-			thirdNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable(),
-			fourthNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable(),
-			fifthNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable(),
+
+		useForm({
+			validationSchema: schema,
+		});
+
+		const { value: firstNumber, errorMessage: firstNumberError } = useField("firstNumber");
+		const { value: secondNumber, errorMessage: secondNumberError } = useField("secondNumber");
+		const { value: thirdNumber, errorMessage: thirdNumberError } = useField("thirdNumber");
+		const { value: fourthNumber, errorMessage: fourthNumberError } = useField("fourthNumber");
+		const { value: fifthNumber, errorMessage: fifthNumberError } = useField("fifthNumber");
+
+		const numbersArray = computed(() => {
+			return [firstNumber.value, secondNumber, thirdNumber.value, fourthNumber.value, fifthNumber.value];
+		});
+
+		const schema = computed(() => {
+			return yup.object({
+				firstNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable().notOneOf([numbersArray], "Liczby nie mogą się powtarzać"),
+				secondNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable().notOneOf([numbersArray], "Liczby nie mogą się powtarzać"),
+				thirdNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable().notOneOf([numbersArray], "Liczby nie mogą się powtarzać"),
+				fourthNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable().notOneOf([numbersArray], "Liczby nie mogą się powtarzać"),
+				fifthNumber: yup.number().required().min(1).max(50).transform(emptyStringToNull).nullable().notOneOf([numbersArray], "Liczby nie mogą się powtarzać"),
+			});
 		});
 
 		function emptyStringToNull(value, originalValue) {
@@ -106,72 +120,77 @@ export default {
 			}
 		}
 
-		function randomMode() {
-			let numberInArray;
-			firstNumber.value = getRandom(1, 49);
-			numbers.value.push(firstNumber.value);
-			console.log(numbers.value);
-			do {
-				secondNumber.value = getRandom(1, 49);
-				numberInArray = numbers.value.includes(secondNumber.value);
-				if (!numberInArray) {
-					numbers.value.push(secondNumber.value);
-					console.log(numbers.value);
-				}
-			} while (numberInArray);
-			do {
-				thirdNumber.value = getRandom(1, 49);
-				numberInArray = numbers.value.includes(thirdNumber.value);
-				if (!numberInArray) {
-					numbers.value.push(thirdNumber.value);
-					console.log(numbers.value);
-				}
-			} while (numberInArray);
-			do {
-				fourthNumber.value = getRandom(1, 49);
-				numberInArray = numbers.value.includes(fourthNumber.value);
-				if (!numberInArray) {
-					numbers.value.push(fourthNumber.value);
-					console.log(numbers.value);
-				}
-			} while (numberInArray);
-			do {
-				fifthNumber.value = getRandom(1, 49);
-				numberInArray = numbers.value.includes(fifthNumber.value);
-				if (!numberInArray) {
-					numbers.value.push(fifthNumber.value);
-					console.log(numbers.value);
-				}
-			} while (numberInArray);
-		}
+		// function randomMode() {
+		// 	let numberInArray;
+		// 	firstNumber.value = getRandom(1, 49);
+		// 	numbers.value.push(firstNumber.value);
+		// 	console.log(numbers.value);
+		// 	do {
+		// 		secondNumber.value = getRandom(1, 49);
+		// 		numberInArray = numbers.value.includes(secondNumber.value);
+		// 		if (!numberInArray) {
+		// 			numbers.value.push(secondNumber.value);
+		// 			console.log(numbers.value);
+		// 		}
+		// 	} while (numberInArray);
+		// 	do {
+		// 		thirdNumber.value = getRandom(1, 49);
+		// 		numberInArray = numbers.value.includes(thirdNumber.value);
+		// 		if (!numberInArray) {
+		// 			numbers.value.push(thirdNumber.value);
+		// 			console.log(numbers.value);
+		// 		}
+		// 	} while (numberInArray);
+		// 	do {
+		// 		fourthNumber.value = getRandom(1, 49);
+		// 		numberInArray = numbers.value.includes(fourthNumber.value);
+		// 		if (!numberInArray) {
+		// 			numbers.value.push(fourthNumber.value);
+		// 			console.log(numbers.value);
+		// 		}
+		// 	} while (numberInArray);
+		// 	do {
+		// 		fifthNumber.value = getRandom(1, 49);
+		// 		numberInArray = numbers.value.includes(fifthNumber.value);
+		// 		if (!numberInArray) {
+		// 			numbers.value.push(fifthNumber.value);
+		// 			console.log(numbers.value);
+		// 		}
+		// 	} while (numberInArray);
+		// }
 
 		function onSubmit() {
-			submittedNumbers.value.push(firstNumber.value);
-			submittedNumbers.value.push(secondNumber.value);
-			submittedNumbers.value.push(thirdNumber.value);
-			submittedNumbers.value.push(fourthNumber.value);
-			submittedNumbers.value.push(fifthNumber.value);
+			submittedNumbers.value.push(firstNumber);
+			submittedNumbers.value.push(secondNumber);
+			submittedNumbers.value.push(thirdNumber);
+			submittedNumbers.value.push(fourthNumber);
+			submittedNumbers.value.push(fifthNumber);
 			isActive.value = false;
 			drawNumbers();
-			compareArrays();
 		}
 
 		return {
 			numbers,
+			testArray,
 			submittedNumbers,
 			randomNumbers,
+			numbersArray,
 			firstNumber,
 			secondNumber,
 			thirdNumber,
 			fourthNumber,
 			fifthNumber,
+			firstNumberError,
+			secondNumberError,
+			thirdNumberError,
+			fourthNumberError,
+			fifthNumberError,
 			isActive,
 			schema,
+			arrs,
 			confirmNumbers,
 			onSubmit,
 			drawNumbers,
-			randomMode,
-			compareArrays,
 		};
 	},
 };
