@@ -1,4 +1,4 @@
-import { setLocale } from "yup";
+import { setLocale, mixed, addMethod } from "yup";
 
 export default setLocale({
 	mixed: {
@@ -10,3 +10,15 @@ export default setLocale({
 		notType: "This is not a number",
 	},
 });
+
+function empty() {
+	return this.nullable().transform((value, orginalValue) => {
+		if (this.isType(value)) return value;
+
+		value = String(orginalValue).trim() === "" ? null : value;
+
+		return value;
+	});
+}
+
+addMethod(mixed, "empty", empty);
