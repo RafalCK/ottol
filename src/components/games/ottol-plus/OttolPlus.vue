@@ -9,42 +9,56 @@
 	<div class="game__board">
 		<div class="game__board--left">
 			<form class="game__form" @submit="onSubmit">
-				<div class="form__input">
+				<div class="form__input" :class="{ has__error: firstNumberError }">
 					<label for="firstNumber">Pierwsza liczba</label>
 					<input v-model="firstNumber" type="number" name="firstNumber" min="1" max="50" />
 					<span>{{ firstNumberError }}</span>
 				</div>
-				<div class="form__input">
+				<div class="form__input" :class="{ has__error: secondNumberError }">
 					<label for="secondNumber">Druga liczba</label>
-					<input @change="handleChange2" v-model="secondNumber" type="number" name="secondNumber" min="1" max="50" />
+					<input v-model="secondNumber" type="number" name="secondNumber" min="1" max="50" />
 					<span>{{ secondNumberError }}</span>
 				</div>
-				<div class="form__input">
+				<div class="form__input" :class="{ has__error: thirdNumberError }">
 					<label for="thirdNumber">Trzecia liczba</label>
 					<input v-model="thirdNumber" type="number" name="thirdNumber" min="1" max="50" />
 					<span>{{ thirdNumberError }}</span>
 				</div>
-				<div class="form__input">
+				<div class="form__input" :class="{ has__error: fourthNumberError }">
 					<label for="fourthNumber">Czwarta liczba</label>
 					<input v-model="fourthNumber" type="number" name="fourthNumber" min="1" max="50" />
 					<span>{{ fourthNumberError }}</span>
 				</div>
-				<div class="form__input">
+				<div class="form__input" :class="{ has__error: fifthNumberError }">
 					<label for="fifthNumber">Piąta liczba</label>
 					<input v-model="fifthNumber" type="number" name="fifthNumber" min="1" max="50" />
 					<span>{{ fifthNumberError }}</span>
 				</div>
 				<div class="game__confirm">
-					<base-button type="button" @click="randomMode" class="game__btn--reverse">Chybił trafił</base-button>
-					<base-button class="game__btn">Zatwierdz liczby</base-button>
+					<base-button :disabled="noWinnerNumbers" type="button" @click="randomMode" class="game__btn--reverse">Chybił trafił</base-button>
+					<base-button :disabled="noWinnerNumbers" class="game__btn">Graj</base-button>
+				</div>
+				<div v-if="randomNumbers.length == 5" class="game__reset">
+					<base-button type="button" class="game__btn--reset" @click="restartGame">Zagraj ponownie</base-button>
 				</div>
 			</form>
 		</div>
 		<div class="game__board--right">
-			<p>Test Computed : {{ numbersArray }}</p>
-			<p>Potwierdzone liczby: {{ submittedNumbers.join(",") }}</p>
-			<p>Wylosowane liczby: {{ randomNumbers.join(",") }}</p>
-			<p>Trafione liczby: {{ winnerNumbers.join(",") }}</p>
+			<div class="game__summary">
+				<span class="summary__header">Wybrane liczby</span>
+				<ul class="summary__balls">
+					<li v-for="number of choosedNumbers" key="number" class="ball ball--blue">{{ number }}</li>
+				</ul>
+				<span class="summary__header">Wylosowane liczby</span>
+				<ul class="summary__balls">
+					<li v-for="number of randomNumbers" key="number" class="ball ball--yellow">{{ number }}</li>
+				</ul>
+				<span class="summary__header">Trafione liczby</span>
+				<span class="summary__info" v-if="noWinnerNumbers && winnerNumbers.length === 0">Nie trafino żadnej liczby</span>
+				<ul v-else class="summary__balls">
+					<li v-for="number of winnerNumbers" key="number" class="ball ball--white">{{ number }}</li>
+				</ul>
+			</div>
 		</div>
 	</div>
 </template>
@@ -62,19 +76,22 @@ export default {
 	components: { BaseCard, BaseInput, BaseButton },
 	setup() {
 		const submittedNumbers = [];
-		const randomNumbers = ref([]);
+		let randomNumbers = ref([]);
 		const numbers = ref([]);
-		let winnerNumbers = [];
+		let winnerNumbers = ref([]);
+		let noWinnerNumbers = ref(false);
 
-		const numbersArray = computed(() => {
-			return [firstNumber.value, secondNumber, thirdNumber.value, fourthNumber.value, fifthNumber.value];
+		const areWinnerNumbers = computed(() => (winnerNumbers.value.length == 0 ? true : false));
+
+		let choosedNumbers = computed(() => {
+			return [firstNumber.value, secondNumber.value, thirdNumber.value, fourthNumber.value, fifthNumber.value];
 		});
 
 		const schema = computed(() => {
 			return yup.object({
 				firstNumber: yup
 					.number()
-					.required("can not be empty")
+					.required()
 					.min(1)
 					.max(50)
 					.empty()
@@ -115,10 +132,8 @@ export default {
 			});
 		});
 
-		const { handleSubmit } = useForm();
-
-		useForm({
-			validationSchema: schema,
+		const { handleSubmit, handleReset } = useForm({
+			validationSchema: schema.value,
 		});
 
 		let { value: firstNumber, errorMessage: firstNumberError } = useField("firstNumber");
@@ -141,29 +156,18 @@ export default {
 			let number;
 			let numberInArray;
 			for (let i = 0; i < 5; i++) {
-				do {
-					number = getRandom(1, 49);
-					numberInArray = randomNumbers.value.includes(number);
-					if (!numberInArray) {
-						randomNumbers.value.push(number);
-					}
-				} while (numberInArray);
+				let rev = i;
+				setTimeout(function () {
+					do {
+						number = getRandom(1, 49);
+						numberInArray = randomNumbers.value.includes(number);
+						if (!numberInArray) {
+							randomNumbers.value.push(number);
+						}
+					} while (numberInArray);
+					winnerNumbers.value = submittedNumbers.filter((element) => randomNumbers.value.includes(element));
+				}, 1500 * (rev + 1));
 			}
-		}
-		function arrayMatch(arr1, arr2) {
-			for (let i = 0; i < arr1.length; ++i) {
-				for (let j = 0; j < arr2.length; ++j) {
-					if (arr1[i] == arr2[j]) {
-						winnerNumbers.push(arr1[i]);
-					}
-				}
-			}
-
-			return winnerNumbers;
-		}
-
-		function checkWin() {
-			console.log("Wykonane");
 		}
 
 		function randomMode() {
@@ -201,21 +205,28 @@ export default {
 			} while (numberInArray);
 		}
 
+		function restartGame() {
+			randomNumbers.value = [];
+			winnerNumbers.value = [];
+			noWinnerNumbers.value = false;
+			handleReset();
+		}
+
 		const onSubmit = handleSubmit(() => {
 			submittedNumbers.push(firstNumber.value);
 			submittedNumbers.push(secondNumber.value);
 			submittedNumbers.push(thirdNumber.value);
 			submittedNumbers.push(fourthNumber.value);
 			submittedNumbers.push(fifthNumber.value);
+			noWinnerNumbers.value = true;
 			drawNumbers();
-			arrayMatch(submittedNumbers, randomNumbers.value);
 		});
 
 		return {
 			numbers,
+			choosedNumbers,
 			submittedNumbers,
 			randomNumbers,
-			numbersArray,
 			winnerNumbers,
 			firstNumber,
 			secondNumber,
@@ -227,11 +238,14 @@ export default {
 			thirdNumberError,
 			fourthNumberError,
 			fifthNumberError,
+			areWinnerNumbers,
+			noWinnerNumbers,
+			handleReset,
 			confirmNumbers,
 			onSubmit,
 			drawNumbers,
 			randomMode,
-			checkWin,
+			restartGame,
 		};
 	},
 };
@@ -292,6 +306,8 @@ export default {
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
+
+		width: 100%;
 	}
 
 	&__confirm {
@@ -309,6 +325,12 @@ export default {
 		cursor: pointer;
 		min-width: 144px;
 
+		&:disabled {
+			color: $color-white;
+			background: $color-primary;
+			opacity: 0.5;
+		}
+
 		&:hover {
 			color: $color-white;
 			background: $color-primary;
@@ -323,18 +345,98 @@ export default {
 			&:hover {
 				background: $color-text;
 			}
+
+			&:disabled {
+				background: $color-text;
+				opacity: 0.6;
+			}
+		}
+
+		&--reset {
+			@extend .game__btn;
+			color: $color-succes;
+			border: 1px solid $color-succes;
+
+			&:hover {
+				background: $color-succes;
+				color: $color-white;
+			}
 		}
 	}
 
-	// &__board {
-	// 	display: flex;
+	&__board {
+		display: flex;
 
-	// 	&--left,
-	// 	&--right {
-	// 		display: flex;
-	// 		flex: 1 1 0px;
-	// 	}
-	// }
+		&--left {
+			display: flex;
+			flex: 2 1 0;
+		}
+
+		&--right {
+			display: flex;
+			flex: 1 1 0;
+			justify-content: center;
+		}
+	}
+
+	&__summary {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+
+		width: 60%;
+
+		background-color: #f8f8f8;
+
+		padding: toRem(20);
+	}
+}
+
+.summary {
+	&__header {
+		text-transform: uppercase;
+		color: $color-additional;
+	}
+	&__balls {
+		display: flex;
+		flex-direction: row;
+
+		padding: 0;
+		list-style: none;
+	}
+
+	&__info {
+		margin-top: toRem(16);
+	}
+}
+
+.ball {
+	width: toRem(30);
+	height: toRem(30);
+	border-radius: 50%;
+
+	margin-right: toRem(8);
+
+	font-weight: $bold;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	&--blue {
+		background: $color-text;
+		color: $color-white;
+	}
+
+	&--yellow {
+		background: $color-primary;
+		color: $color-black;
+	}
+
+	&--white {
+		background: $color-succes;
+		color: $color-white;
+	}
 }
 
 .form {
@@ -347,6 +449,12 @@ export default {
 		width: 100%;
 
 		margin-bottom: toRem(10);
+
+		.has__error {
+			label {
+				color: $color-error;
+			}
+		}
 
 		label {
 			width: 30%;

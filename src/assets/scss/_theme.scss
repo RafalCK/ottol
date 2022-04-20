@@ -22,10 +22,13 @@ input {
 	border-bottom: toRem(8) solid $color-primary;
 }
 
-span[role="alert"] {
-	color: $color-error;
-}
-
-.form__input input.is-invalid {
-	border: 2px solid $color-error;
+.form__input.has__error {
+	input {
+		border: 2px solid $color-error;
+	}
+	span,
+	label,
+	input {
+		color: $color-error;
+	}
 }
