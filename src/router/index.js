@@ -13,6 +13,9 @@ const routes = [
 		path: "/",
 		name: "Home",
 		component: Home,
+		meta: {
+			hideSubheader: true,
+		},
 	},
 	{
 		path: "/game",

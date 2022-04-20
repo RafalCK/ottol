@@ -11,12 +11,14 @@
 			<router-link to="/account">Konto</router-link>
 		</nav>
 	</div>
+	<score-bar v-if="!$route.meta.hideSubheader"></score-bar>
 </template>
 
 <script>
+import ScoreBar from "../components/score/ScoreBar.vue";
 export default {
 	name: "TheHeader",
-	components: {},
+	components: { ScoreBar },
 };
 </script>
 
