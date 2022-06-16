@@ -22,7 +22,35 @@ input {
 	border-bottom: toRem(8) solid $color-primary;
 }
 
-.form__input.has__error {
+.form {
+	&__input {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: flex-start;
+
+		width: 100%;
+
+		margin-bottom: toRem(10);
+
+		label {
+			width: 30%;
+			margin-bottom: toRem(2);
+		}
+
+		input {
+			width: 30%;
+			height: toRem(30);
+
+			border: 1px solid $color-primary;
+			border-radius: 4px;
+
+			color: $color-text;
+		}
+	}
+}
+
+.has__error {
 	input {
 		border: 2px solid $color-error;
 	}

@@ -1,13 +1,24 @@
 <template>
 	<div class="score">
-		<span class="score__points">Saldo: 100</span>
+		<span class="score__points">Saldo: {{ score }}</span>
 	</div>
 </template>
 
 <script>
+import { computed } from "vue";
+import { useStore } from "vuex";
 export default {
 	name: "ScoreBar",
 	components: {},
+	setup() {
+		const store = useStore();
+
+		const score = computed(() => store.state.score);
+
+		return {
+			score,
+		};
+	},
 };
 </script>
 

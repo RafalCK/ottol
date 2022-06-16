@@ -11,79 +11,105 @@
 			<form class="game__form" @submit="onSubmit">
 				<div class="form__input" :class="{ has__error: firstNumberError }">
 					<label for="firstNumber">Pierwsza liczba</label>
-					<input v-model="firstNumber" type="number" name="firstNumber" min="1" max="50" />
+					<input v-model="firstNumber" :disabled="noWinnerNumbers" type="number" name="firstNumber" min="1" max="50" />
 					<span>{{ firstNumberError }}</span>
 				</div>
 				<div class="form__input" :class="{ has__error: secondNumberError }">
 					<label for="secondNumber">Druga liczba</label>
-					<input v-model="secondNumber" type="number" name="secondNumber" min="1" max="50" />
+					<input v-model="secondNumber" :disabled="noWinnerNumbers" type="number" name="secondNumber" min="1" max="49" />
 					<span>{{ secondNumberError }}</span>
 				</div>
 				<div class="form__input" :class="{ has__error: thirdNumberError }">
 					<label for="thirdNumber">Trzecia liczba</label>
-					<input v-model="thirdNumber" type="number" name="thirdNumber" min="1" max="50" />
+					<input v-model="thirdNumber" :disabled="noWinnerNumbers" type="number" name="thirdNumber" min="1" max="49" />
 					<span>{{ thirdNumberError }}</span>
 				</div>
 				<div class="form__input" :class="{ has__error: fourthNumberError }">
 					<label for="fourthNumber">Czwarta liczba</label>
-					<input v-model="fourthNumber" type="number" name="fourthNumber" min="1" max="50" />
+					<input v-model="fourthNumber" :disabled="noWinnerNumbers" type="number" name="fourthNumber" min="1" max="49" />
 					<span>{{ fourthNumberError }}</span>
 				</div>
 				<div class="form__input" :class="{ has__error: fifthNumberError }">
 					<label for="fifthNumber">Piąta liczba</label>
-					<input v-model="fifthNumber" type="number" name="fifthNumber" min="1" max="50" />
+					<input v-model="fifthNumber" :disabled="noWinnerNumbers" type="number" name="fifthNumber" min="1" max="49" />
 					<span>{{ fifthNumberError }}</span>
 				</div>
 				<div class="game__confirm">
-					<base-button :disabled="noWinnerNumbers" type="button" @click="randomMode" class="game__btn--reverse">Chybił trafił</base-button>
-					<base-button :disabled="noWinnerNumbers" class="game__btn">Graj</base-button>
+					<div class="game__controls">
+						<base-button :disabled="noWinnerNumbers" type="button" @click="randomMode" class="btn--secondary">Chybił trafił</base-button>
+						<div class="game__bid" :class="{ has__error: bidError }">
+							<label for="bid">Stawka</label>
+							<input v-model="bid" :disabled="noWinnerNumbers" type="number" name="bid" min="1" max="1000" />
+						</div>
+						<base-button :disabled="noWinnerNumbers" class="btn--primary">Graj</base-button>
+					</div>
+					<div class="game__confirm--error" :class="{ has__error: bidError }">
+						<span>{{ bidError }}</span>
+					</div>
 				</div>
-				<div v-if="randomNumbers.length == 5" class="game__reset">
-					<base-button type="button" class="game__btn--reset" @click="restartGame">Zagraj ponownie</base-button>
+				<div class="game__reset">
+					<base-button v-if="randomNumbers.length == 5" type="button" class="btn--succes" @click="restartGame">Zagraj ponownie</base-button>
+					<base-button v-if="addPoints || addPointsBtn" type="button" class="btn--succes" @click="showAddCreditsBtn">{{ showHide }}</base-button>
 				</div>
 			</form>
+			<div class="game__charge" v-if="addPointsBtn">
+				<add-score />
+			</div>
 		</div>
 		<div class="game__board--right">
 			<div class="game__summary">
 				<span class="summary__header">Wybrane liczby</span>
 				<ul class="summary__balls">
-					<li v-for="number of choosedNumbers" key="number" class="ball ball--blue">{{ number }}</li>
+					<li v-for="number of submittedNumbers" key="number" class="ball ball--blue">{{ number }}</li>
 				</ul>
 				<span class="summary__header">Wylosowane liczby</span>
 				<ul class="summary__balls">
 					<li v-for="number of randomNumbers" key="number" class="ball ball--yellow">{{ number }}</li>
 				</ul>
 				<span class="summary__header">Trafione liczby</span>
-				<span class="summary__info" v-if="noWinnerNumbers && winnerNumbers.length === 0">Nie trafino żadnej liczby</span>
-				<ul v-else class="summary__balls">
-					<li v-for="number of winnerNumbers" key="number" class="ball ball--white">{{ number }}</li>
-				</ul>
+				<template v-if="winnerNumbers.length !== 0">
+					<ul class="summary__balls">
+						<li v-for="number of winnerNumbers" key="number" class="ball ball--white">{{ number }}</li>
+					</ul>
+					<span class="summary__info--success">Gratulacje wygrałeś {{ winnersCredits }} kredytów </span>
+				</template>
+				<span class="summary__info" v-else-if="noWinnerNumbers && winnerNumbers.length === 0">Nie trafino żadnej liczby</span>
 			</div>
 		</div>
 	</div>
 </template>
 
 <script>
-import BaseCard from "../../base/BaseCard.vue";
-import BaseInput from "../../base/BaseInput.vue";
-import BaseButton from "../../base/BaseButton.vue";
+import { useStore } from "vuex";
 import { useForm, useField } from "vee-validate";
 import * as yup from "yup";
 import { computed, ref } from "vue";
-
+import BaseCard from "../../base/BaseCard.vue";
+import BaseInput from "../../base/BaseInput.vue";
+import BaseButton from "../../base/BaseButton.vue";
+import AddScore from "../../score/AddScore";
+import useRandomNumbers from "../../../composables/useRandomNumbers";
 export default {
 	name: "OttolPlus",
-	components: { BaseCard, BaseInput, BaseButton },
+	components: { BaseCard, BaseInput, BaseButton, AddScore },
 	setup() {
-		const submittedNumbers = [];
-		let randomNumbers = ref([]);
+		const store = useStore();
+		const score = computed(() => store.state.score);
 		const numbers = ref([]);
+		const { getRandom, drawNumbers } = useRandomNumbers();
+
+		let submittedNumbers = ref([]);
+		let randomNumbers = ref([]);
 		let winnerNumbers = ref([]);
 		let noWinnerNumbers = ref(false);
+		let addPointsBtn = ref(false);
+		let checkedBid = ref();
 
+		const addPoints = computed(() => (bid.value > score.value ? true : false) || score.value == 0);
+		const winnersCredits = computed(() => checkedBid.value * winnerNumbers.value.length);
+		const showHide = computed(() => (addPointsBtn.value ? "Ukryj dodawanie kredytów" : "Dokup kredyty"));
 		const areWinnerNumbers = computed(() => (winnerNumbers.value.length == 0 ? true : false));
-
-		let choosedNumbers = computed(() => {
+		const choosedNumbers = computed(() => {
 			return [firstNumber.value, secondNumber.value, thirdNumber.value, fourthNumber.value, fifthNumber.value];
 		});
 
@@ -93,7 +119,7 @@ export default {
 					.number()
 					.required()
 					.min(1)
-					.max(50)
+					.max(49)
 					.empty()
 					.nullable()
 					.notOneOf([yup.ref("secondNumber"), yup.ref("thirdNumber"), yup.ref("fourthNumber"), yup.ref("fifthNumber"), null], "Te liczby się powtarzają"),
@@ -101,7 +127,7 @@ export default {
 					.number()
 					.required()
 					.min(1)
-					.max(50)
+					.max(49)
 					.empty()
 					.nullable()
 					.notOneOf([yup.ref("firstNumber"), yup.ref("thirdNumber"), yup.ref("fourthNumber"), yup.ref("fifthNumber"), null], "Te liczby się powtarzają"),
@@ -109,7 +135,7 @@ export default {
 					.number()
 					.required()
 					.min(1)
-					.max(50)
+					.max(49)
 					.empty()
 					.nullable()
 					.notOneOf([yup.ref("firstNumber"), yup.ref("secondNumber"), yup.ref("fourthNumber"), yup.ref("fifthNumber"), null], "Te liczby się powtarzają"),
@@ -117,7 +143,7 @@ export default {
 					.number()
 					.required()
 					.min(1)
-					.max(50)
+					.max(49)
 					.empty()
 					.nullable()
 					.notOneOf([yup.ref("firstNumber"), yup.ref("secondNumber"), yup.ref("thirdNumber"), yup.ref("fifthNumber"), null], "Te liczby się powtarzają"),
@@ -125,15 +151,16 @@ export default {
 					.number()
 					.required()
 					.min(1)
-					.max(50)
+					.max(49)
 					.empty()
 					.nullable()
 					.notOneOf([yup.ref("firstNumber"), yup.ref("secondNumber"), yup.ref("thirdNumber"), yup.ref("fourthNumber"), null], "Te liczby się powtarzają"),
+				bid: yup.number().required().min(1).max(score.value, "Nie masz wystarcząjco kredytów").empty().nullable(),
 			});
 		});
 
 		const { handleSubmit, handleReset } = useForm({
-			validationSchema: schema.value,
+			validationSchema: schema,
 		});
 
 		let { value: firstNumber, errorMessage: firstNumberError } = useField("firstNumber");
@@ -141,33 +168,27 @@ export default {
 		let { value: thirdNumber, errorMessage: thirdNumberError } = useField("thirdNumber");
 		let { value: fourthNumber, errorMessage: fourthNumberError } = useField("fourthNumber");
 		let { value: fifthNumber, errorMessage: fifthNumberError } = useField("fifthNumber");
+		let { value: bid, errorMessage: bidError } = useField("bid");
 
-		function confirmNumbers() {
-			getRandomNumbers();
+		function test(maxNumber = 5, tested = []) {
+			const ntest = getRandom(1, 49);
+			setTimeout(function () {
+				if (!tested.includes(ntest)) {
+					tested.push(ntest);
+				}
+				if (tested.length < 5) {
+					test(maxNumber, tested);
+				}
+			});
+			return tested;
 		}
 
-		function getRandom(min, max) {
-			min = Math.ceil(min);
-			max = Math.floor(max);
-			return Math.floor(Math.random() * (max - min + 1)) + min;
+		function removeCredits() {
+			store.dispatch("removeCredits", { value: checkedBid.value });
 		}
 
-		function drawNumbers() {
-			let number;
-			let numberInArray;
-			for (let i = 0; i < 5; i++) {
-				let rev = i;
-				setTimeout(function () {
-					do {
-						number = getRandom(1, 49);
-						numberInArray = randomNumbers.value.includes(number);
-						if (!numberInArray) {
-							randomNumbers.value.push(number);
-						}
-					} while (numberInArray);
-					winnerNumbers.value = submittedNumbers.filter((element) => randomNumbers.value.includes(element));
-				}, 1500 * (rev + 1));
-			}
+		function addCredits() {
+			store.dispatch("addCredits", { value: checkedBid.value * winnerNumbers.value.length });
 		}
 
 		function randomMode() {
@@ -206,20 +227,28 @@ export default {
 		}
 
 		function restartGame() {
+			submittedNumbers.value = [];
 			randomNumbers.value = [];
 			winnerNumbers.value = [];
+			checkedBid.value = undefined;
 			noWinnerNumbers.value = false;
-			handleReset();
+		}
+
+		function showAddCreditsBtn() {
+			addPointsBtn.value = !addPointsBtn.value;
 		}
 
 		const onSubmit = handleSubmit(() => {
-			submittedNumbers.push(firstNumber.value);
-			submittedNumbers.push(secondNumber.value);
-			submittedNumbers.push(thirdNumber.value);
-			submittedNumbers.push(fourthNumber.value);
-			submittedNumbers.push(fifthNumber.value);
+			submittedNumbers.value.push(firstNumber.value);
+			submittedNumbers.value.push(secondNumber.value);
+			submittedNumbers.value.push(thirdNumber.value);
+			submittedNumbers.value.push(fourthNumber.value);
+			submittedNumbers.value.push(fifthNumber.value);
 			noWinnerNumbers.value = true;
-			drawNumbers();
+			checkedBid.value = bid.value;
+			removeCredits();
+			handleReset();
+			drawNumbers(5, randomNumbers, winnerNumbers, submittedNumbers, addCredits, 1, 49);
 		});
 
 		return {
@@ -233,19 +262,26 @@ export default {
 			thirdNumber,
 			fourthNumber,
 			fifthNumber,
+			bid,
 			firstNumberError,
 			secondNumberError,
 			thirdNumberError,
 			fourthNumberError,
 			fifthNumberError,
+			bidError,
 			areWinnerNumbers,
 			noWinnerNumbers,
+			addPoints,
+			addPointsBtn,
+			showHide,
+			winnersCredits,
+			checkedBid,
 			handleReset,
-			confirmNumbers,
 			onSubmit,
 			drawNumbers,
 			randomMode,
 			restartGame,
+			showAddCreditsBtn,
 		};
 	},
 };
@@ -311,56 +347,32 @@ export default {
 	}
 
 	&__confirm {
-		display: flex;
-		gap: 40px;
+		&--error {
+			text-align: center;
+			margin-top: 10px;
+		}
 	}
 
-	&__btn {
-		margin-top: 10px;
-		padding: toRem(10) toRem(15);
-		color: $color-primary;
-		border: 1px solid $color-primary;
-		background: transparent;
-		transition: $transition;
-		cursor: pointer;
-		min-width: 144px;
+	&__controls {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-start;
+		align-items: center;
 
-		&:disabled {
-			color: $color-white;
-			background: $color-primary;
-			opacity: 0.5;
+		.btn {
+			margin-top: 10px;
 		}
+	}
 
-		&:hover {
-			color: $color-white;
-			background: $color-primary;
-			transition: $transition;
-		}
+	&__bid {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: space-around;
+		margin: 0 25px;
 
-		&--reverse {
-			@extend .game__btn;
-			color: $color-text;
-			border: 1px solid $color-text;
-
-			&:hover {
-				background: $color-text;
-			}
-
-			&:disabled {
-				background: $color-text;
-				opacity: 0.6;
-			}
-		}
-
-		&--reset {
-			@extend .game__btn;
-			color: $color-succes;
-			border: 1px solid $color-succes;
-
-			&:hover {
-				background: $color-succes;
-				color: $color-white;
-			}
+		input {
+			height: toRem(24);
 		}
 	}
 
@@ -369,13 +381,12 @@ export default {
 
 		&--left {
 			display: flex;
+			flex-direction: column;
 			flex: 2 1 0;
 		}
 
 		&--right {
-			display: flex;
 			flex: 1 1 0;
-			justify-content: center;
 		}
 	}
 
@@ -389,6 +400,24 @@ export default {
 		background-color: #f8f8f8;
 
 		padding: toRem(20);
+	}
+
+	&__reset {
+		display: flex;
+		margin-top: 10px;
+		gap: 10px;
+	}
+
+	&__charge {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		margin-top: 20px;
+
+		:deep() .form__input {
+			align-items: center;
+		}
 	}
 }
 
@@ -438,38 +467,9 @@ export default {
 		color: $color-white;
 	}
 }
-
 .form {
 	&__input {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
 		align-items: center;
-
-		width: 100%;
-
-		margin-bottom: toRem(10);
-
-		.has__error {
-			label {
-				color: $color-error;
-			}
-		}
-
-		label {
-			width: 30%;
-			margin-bottom: toRem(2);
-		}
-
-		input {
-			width: 30%;
-			height: toRem(30);
-
-			border: 1px solid $color-primary;
-			border-radius: 4px;
-
-			color: $color-text;
-		}
 	}
 }
 </style>
