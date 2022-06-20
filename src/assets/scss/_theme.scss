@@ -5,6 +5,10 @@ html {
 	color: $color-text;
 }
 
+body {
+	background: url(../images/background.webp) repeat;
+}
+
 body::-webkit-scrollbar {
 	width: toRem(10);
 }
