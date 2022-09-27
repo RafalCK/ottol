@@ -64,3 +64,37 @@ input {
 		color: $color-error;
 	}
 }
+
+@media (max-width: 800px) {
+	.game {
+		&__header {
+			h1 {
+				font-size: toRem(20);
+				margin-left: toRem(20);
+			}
+		}
+		&__board,
+		&__controls {
+			flex-direction: column !important;
+
+			.btn.btn--secondary {
+				margin-bottom: toRem(6);
+			}
+		}
+
+		&__summary {
+			width: 100% !important;
+			padding: toRem(10) !important;
+			margin-top: toRem(14);
+		}
+	}
+}
+
+@media (min-width: 801px) and (max-width: 1300px) {
+	.game {
+		&__summary {
+			width: 100% !important;
+			padding: toRem(10) !important;
+		}
+	}
+}

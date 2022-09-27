@@ -70,9 +70,25 @@ export default {
 	border-radius: toRem(25);
 	color: $color-white;
 	transition: color 0.2s ease-in-out;
+	text-align: center;
 
 	&:hover {
 		color: $color-text;
+	}
+}
+
+@media (max-width: 576px) {
+	.base__card {
+		padding: 10px;
+
+		&-info {
+			flex-direction: column;
+		}
+
+		h3,
+		p {
+			text-align: center;
+		}
 	}
 }
 </style>

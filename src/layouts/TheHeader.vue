@@ -55,4 +55,18 @@ a {
 		color: $color-hover;
 	}
 }
+
+@media (max-width: 576px) {
+	.header {
+		padding: 0 toRem(10);
+	}
+	.logo {
+		max-width: toRem(45);
+		height: toRem(36);
+	}
+
+	a {
+		font-size: toRem(12);
+	}
+}
 </style>

@@ -21,33 +21,36 @@ export default {
 <style lang="scss">
 .round {
 	position: relative;
-}
+	label {
+		background-color: $color-white;
+		border: 1px solid $color-additional;
+		color: $color-black;
+		border-radius: 50%;
+		cursor: pointer;
+		height: toRem(30);
+		width: toRem(30);
+		font-weight: $bold;
 
-.round label {
-	background-color: $color-white;
-	border: 1px solid $color-additional;
-	color: $color-black;
-	border-radius: 50%;
-	cursor: pointer;
-	height: toRem(30);
-	width: toRem(30);
-	font-weight: $bold;
+		position: absolute;
+		left: 0;
+		top: 0;
 
-	position: absolute;
-	left: 0;
-	top: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
 
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
+	input[type="checkbox"] {
+		visibility: hidden;
+	}
 
-.round input[type="checkbox"] {
-	visibility: hidden;
-}
+	input[type="checkbox"]:checked + label {
+		background-color: $color-succes;
+		color: $color-white;
+	}
 
-.round input[type="checkbox"]:checked + label {
-	background-color: $color-succes;
-	color: $color-white;
+	input:disabled + label {
+		background: rgba(0, 0, 0, 0.1);
+	}
 }
 </style>

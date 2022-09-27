@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from "../pages/Home.vue";
 import Game from "../pages/Game.vue";
 import OttolMini from "../components/games/ottol-mini/OttolMini.vue";
-import Test from "../components/games/Test.vue";
 import OttolPlus from "../components/games/ottol-plus/OttolPlus.vue";
 import RepusSzansa from "../components/games/repus-szansa/RepusSzansa.vue";
 import Results from "../pages/Results.vue";
@@ -36,11 +35,6 @@ const routes = [
 		path: "/game/repus-szansa",
 		name: "RepusSzansa",
 		component: RepusSzansa,
-	},
-	{
-		path: "/test",
-		name: "Test",
-		component: Test,
 	},
 	{
 		path: "/results",

@@ -3,22 +3,21 @@
 		<div class="game__image">
 			<img src="@/assets/images/mini_lotto.png" />
 		</div>
-		<h1 class="game__header-title">Ottol Mini</h1>
+		<h1 class="game__header-title">{{ gameName }}</h1>
 	</div>
 	<p class="game__info">Wybierz <span class="game__info--bold">3</span> spośród <span class="game__info--bold">9</span> liczb (Przedział liczbowy od 1 do 9). Jeśli nie masz swoich wytypowanych liczb możesz zagrać systemem na chybił trafił.</p>
 	<div class="game__board">
 		<div class="game__board--left">
 			<form class="game__form" @submit="onSubmit">
-				<BaseMultiCheckbox v-model:value="mySelectedValue" :class="{ active: mySelectedValue }" :options="numbers" :disabled="disabledNumber" />
-				<p>{{ mySelectedValue }}</p>
+				<BaseMultiCheckbox v-model:value="selectedNumbers" :options="numbers" />
 				<div class="game__confirm">
 					<div class="game__controls">
-						<base-button :disabled="noWinnerNumbers" type="button" @click="randomMode" class="btn--secondary">Chybił trafił</base-button>
+						<base-button :disabled="noWinnerNumbers" type="button" @click="runRandomMode(3, selectedNumbers)" class="btn--secondary">Chybił trafił</base-button>
 						<div class="game__bid" :class="{ has__error: bidError }">
 							<label for="bid">Stawka</label>
 							<input v-model="bid" :disabled="noWinnerNumbers" type="number" name="bid" min="1" max="1000" />
 						</div>
-						<base-button :disabled="noWinnerNumbers" class="btn--primary">Graj</base-button>
+						<base-button :disabled="noWinnerNumbers || canPlay" class="btn--primary">Graj</base-button>
 					</div>
 					<div class="game__confirm--error" :class="{ has__error: bidError }">
 						<span>{{ bidError }}</span>
@@ -60,9 +59,8 @@
 import { useStore } from "vuex";
 import { useForm, useField } from "vee-validate";
 import * as yup from "yup";
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import BaseCard from "../../base/BaseCard.vue";
-import BaseInput from "../../base/BaseInput.vue";
 import BaseButton from "../../base/BaseButton.vue";
 import AddScore from "../../score/AddScore";
 import BaseCheckbox from "../../base/BaseCheckbox.vue";
@@ -70,13 +68,13 @@ import BaseMultiCheckbox from "../../base/BaseMultiCheckbox.vue";
 import useRandomNumbers from "../../../composables/useRandomNumbers";
 export default {
 	name: "OttolMini",
-	components: { BaseCard, BaseInput, BaseButton, AddScore, BaseCheckbox, BaseMultiCheckbox },
+	components: { BaseCard, BaseButton, AddScore, BaseCheckbox, BaseMultiCheckbox },
 	setup() {
 		const store = useStore();
 		const score = computed(() => store.state.score);
 		const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-		let disabledNumber = ref(false);
 		const { getRandom, drawNumbers } = useRandomNumbers();
+		const gameName = "Ottol Mini";
 
 		let submittedNumbers = ref([]);
 		let randomNumbers = ref([]);
@@ -84,12 +82,16 @@ export default {
 		let noWinnerNumbers = ref(false);
 		let addPointsBtn = ref(false);
 		let checkedBid = ref();
-		const mySelectedValue = ref([]);
+		const selectedNumbers = ref([]);
 
 		const addPoints = computed(() => (bid.value > score.value ? true : false) || score.value == 0);
-		const winnersCredits = computed(() => checkedBid.value * winnerNumbers.value.length);
+		let winnersCredits = computed(() => checkedBid.value * winnerNumbers.value.length);
 		const showHide = computed(() => (addPointsBtn.value ? "Ukryj dodawanie kredytów" : "Dokup kredyty"));
 		const areWinnerNumbers = computed(() => (winnerNumbers.value.length == 0 ? true : false));
+		const canPlay = computed(() => (selectedNumbers.value.length === 3 ? false : true));
+
+		let resultCredits = 0;
+		let resultScore = 0;
 
 		const schema = computed(() => {
 			return yup.object({
@@ -104,22 +106,12 @@ export default {
 		let { value: bid, errorMessage: bidError } = useField("bid");
 
 		const onSubmit = handleSubmit(() => {
-			submittedNumbers.value = mySelectedValue.value;
+			submittedNumbers.value = selectedNumbers.value;
 			noWinnerNumbers.value = true;
 			checkedBid.value = bid.value;
 			removeCredits();
 			handleReset();
-			drawNumbers(3, randomNumbers, winnerNumbers, submittedNumbers, addCredits, 1, 9);
-		});
-
-		watch(mySelectedValue, (currentValue) => {
-			if (currentValue.length == 3) {
-				mySelectedValue.value.forEach((element) => {
-					console.log(element);
-				});
-			} else {
-				disabledNumber.value = false;
-			}
+			drawNumbers(3, randomNumbers, winnerNumbers, submittedNumbers, addCredits, 1, 9, addResult);
 		});
 
 		function removeCredits() {
@@ -130,23 +122,36 @@ export default {
 			store.dispatch("addCredits", { value: checkedBid.value * winnerNumbers.value.length });
 		}
 
-		function randomMode() {
+		function addResult() {
+			store.dispatch("addResult", { gameName: gameName, betValue: checkedBid.value, choosen: submittedNumbers.value, random: randomNumbers.value, winner: winnerNumbers.value.length > 0 ? winnerNumbers.value : "Brak trafionych opcji", credits: (resultCredits = winnersCredits.value), saldo: (resultScore = score.value) });
+		}
+
+		function randomMode(numberMax, numberInArray) {
 			const number = getRandom(1, 9);
-			if (!mySelectedValue.value.includes(number)) {
-				mySelectedValue.value.push(number);
+			if (!numberInArray.includes(number)) {
+				numberInArray.push(number);
 			}
-			if (mySelectedValue.value.length < 3) {
-				randomMode();
+			if (numberInArray.length < numberMax) {
+				randomMode(numberMax, numberInArray);
 			}
-			return mySelectedValue;
+			return numberInArray;
+		}
+
+		function runRandomMode(numberMax, numberInArray) {
+			if (numberInArray.length > 0) {
+				numberInArray.splice(0, numberInArray.length);
+				randomMode(numberMax, numberInArray);
+			} else {
+				randomMode(numberMax, numberInArray);
+			}
 		}
 
 		function restartGame() {
 			submittedNumbers.value = [];
-			mySelectedValue.value = [];
+			selectedNumbers.value = [];
 			randomNumbers.value = [];
 			winnerNumbers.value = [];
-			checkedBid.value = undefined;
+			checkedBid.value = null;
 			noWinnerNumbers.value = false;
 		}
 
@@ -173,8 +178,10 @@ export default {
 			onSubmit,
 			restartGame,
 			showAddCreditsBtn,
-			mySelectedValue,
-			disabledNumber,
+			selectedNumbers,
+			canPlay,
+			runRandomMode,
+			gameName,
 		};
 	},
 };
@@ -244,6 +251,7 @@ export default {
 	}
 
 	&__confirm {
+		margin-top: toRem(40);
 		&--error {
 			text-align: center;
 			margin-top: 10px;
@@ -280,6 +288,7 @@ export default {
 			display: flex;
 			flex-direction: column;
 			flex: 2 1 0;
+			justify-content: center;
 		}
 
 		&--right {
@@ -367,6 +376,12 @@ export default {
 .form {
 	&__input {
 		align-items: center;
+	}
+}
+
+@media (min-width: 801px) and (max-width: 1300px) {
+	.game__board--right {
+		margin-left: toRem(20);
 	}
 }
 </style>

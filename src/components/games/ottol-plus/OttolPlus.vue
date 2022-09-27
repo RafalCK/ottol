@@ -3,7 +3,7 @@
 		<div class="game__image">
 			<img src="@/assets/images/lotto_plus.png" />
 		</div>
-		<h1>Ottol Plus</h1>
+		<h1>{{ gameName }}</h1>
 	</div>
 	<p class="game__info">Wybierz <span class="game__info--bold">6</span> spośród <span class="game__info--bold">49</span> liczb (Przedział liczbowy od 1 do 49). Jeśli nie masz swoich wytypowanych liczb możesz zagrać systemem na chybił trafił.</p>
 	<div class="game__board">
@@ -97,6 +97,7 @@ export default {
 		const score = computed(() => store.state.score);
 		const numbers = ref([]);
 		const { getRandom, drawNumbers } = useRandomNumbers();
+		const gameName = "Ottol Plus";
 
 		let submittedNumbers = ref([]);
 		let randomNumbers = ref([]);
@@ -106,12 +107,15 @@ export default {
 		let checkedBid = ref();
 
 		const addPoints = computed(() => (bid.value > score.value ? true : false) || score.value == 0);
-		const winnersCredits = computed(() => checkedBid.value * winnerNumbers.value.length);
+		let winnersCredits = computed(() => checkedBid.value * winnerNumbers.value.length);
 		const showHide = computed(() => (addPointsBtn.value ? "Ukryj dodawanie kredytów" : "Dokup kredyty"));
 		const areWinnerNumbers = computed(() => (winnerNumbers.value.length == 0 ? true : false));
 		const choosedNumbers = computed(() => {
 			return [firstNumber.value, secondNumber.value, thirdNumber.value, fourthNumber.value, fifthNumber.value];
 		});
+
+		let resultCredits = 0;
+		let resultScore = 0;
 
 		const schema = computed(() => {
 			return yup.object({
@@ -170,25 +174,16 @@ export default {
 		let { value: fifthNumber, errorMessage: fifthNumberError } = useField("fifthNumber");
 		let { value: bid, errorMessage: bidError } = useField("bid");
 
-		function test(maxNumber = 5, tested = []) {
-			const ntest = getRandom(1, 49);
-			setTimeout(function () {
-				if (!tested.includes(ntest)) {
-					tested.push(ntest);
-				}
-				if (tested.length < 5) {
-					test(maxNumber, tested);
-				}
-			});
-			return tested;
-		}
-
 		function removeCredits() {
 			store.dispatch("removeCredits", { value: checkedBid.value });
 		}
 
 		function addCredits() {
 			store.dispatch("addCredits", { value: checkedBid.value * winnerNumbers.value.length });
+		}
+
+		function addResult() {
+			store.dispatch("addResult", { gameName: gameName, betValue: checkedBid.value, choosen: submittedNumbers.value, random: randomNumbers.value, winner: winnerNumbers.value.length > 0 ? winnerNumbers.value : "Brak trafionych opcji", credits: (resultCredits = winnersCredits.value), saldo: (resultScore = score.value) });
 		}
 
 		function randomMode() {
@@ -230,7 +225,7 @@ export default {
 			submittedNumbers.value = [];
 			randomNumbers.value = [];
 			winnerNumbers.value = [];
-			checkedBid.value = undefined;
+			checkedBid.value = null;
 			noWinnerNumbers.value = false;
 		}
 
@@ -248,11 +243,12 @@ export default {
 			checkedBid.value = bid.value;
 			removeCredits();
 			handleReset();
-			drawNumbers(5, randomNumbers, winnerNumbers, submittedNumbers, addCredits, 1, 49);
+			drawNumbers(5, randomNumbers, winnerNumbers, submittedNumbers, addCredits, 1, 49, addResult);
 		});
 
 		return {
 			numbers,
+			gameName,
 			choosedNumbers,
 			submittedNumbers,
 			randomNumbers,
@@ -470,6 +466,24 @@ export default {
 .form {
 	&__input {
 		align-items: center;
+	}
+}
+
+@media (max-width: 800px) {
+	.form__input {
+		label,
+		input {
+			width: 100%;
+		}
+	}
+}
+
+@media (min-width: 801px) and (max-width: 1300px) {
+	.form__input {
+		label,
+		input {
+			width: 80%;
+		}
 	}
 }
 </style>

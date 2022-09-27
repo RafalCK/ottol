@@ -70,4 +70,19 @@ h1 {
 		}
 	}
 }
+
+@media (max-width: 576px) {
+	h1 {
+		font-size: toRem(34);
+	}
+}
+
+@media (max-width: 920px) {
+	.game {
+		&__container {
+			grid-template-rows: repeat(3, 1fr);
+			grid-template-columns: none;
+		}
+	}
+}
 </style>

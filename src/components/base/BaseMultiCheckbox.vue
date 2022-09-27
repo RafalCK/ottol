@@ -1,12 +1,11 @@
 <template>
 	<div class="multicheckbox-container">
-		<BaseCheckbox v-for="(option, index) in options" :checked="value.includes(option)" @update:checked="check(option, $event)" :id="option" :key="index" :disabled="disabled" />
+		<BaseCheckbox v-for="(option, index) in options" :checked="value.includes(option)" @update:checked="check(option, $event)" :id="option" :key="index" :disabled="isDisabled(option)" />
 	</div>
 </template>
 
 <script>
 import BaseCheckbox from "./BaseCheckbox";
-import { computed, ref } from "vue";
 
 export default {
 	name: "BaseMultiCheckbox",
@@ -21,10 +20,6 @@ export default {
 			type: Array,
 			required: true,
 		},
-		disabled: {
-			type: Boolean,
-			default: false,
-		},
 	},
 	setup(props, context) {
 		const check = (optionId, checked) => {
@@ -37,11 +32,13 @@ export default {
 			context.emit("update:value", updatedValue);
 		};
 
-		const noDisaledValue = computed(() => console.log(props.value));
+		const isDisabled = (option) => {
+			return props.value.length >= 3 && !props.value.includes(option);
+		};
 
 		return {
 			check,
-			noDisaledValue,
+			isDisabled,
 		};
 	},
 };

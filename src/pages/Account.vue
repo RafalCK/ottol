@@ -31,4 +31,14 @@ h1 {
 	text-align: center;
 	margin-bottom: toRem(50);
 }
+
+@media (max-width: 576px) {
+	h1 {
+		font-size: toRem(34);
+	}
+
+	h3 {
+		font-size: toRem(18);
+	}
+}
 </style>

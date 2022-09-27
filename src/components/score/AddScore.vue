@@ -43,4 +43,17 @@ h1 {
 	text-align: center;
 	margin-bottom: toRem(50);
 }
+
+@media (max-width: 920px) {
+	.form__input {
+		label {
+			width: 100%;
+			margin-bottom: toRem(8);
+		}
+
+		input {
+			width: 100%;
+		}
+	}
+}
 </style>

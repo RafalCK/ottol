@@ -40,4 +40,20 @@ h1 {
 .card3::after {
 	content: "3";
 }
+
+@media (max-width: 576px) {
+	h1 {
+		font-size: toRem(34);
+	}
+}
+
+@media (max-width: 920px) {
+	.card1,
+	.card2,
+	.card3 {
+		&:after {
+			content: none;
+		}
+	}
+}
 </style>
